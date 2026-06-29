@@ -4,25 +4,96 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
-from ai_interviewer.question_engine import QUESTION_DATABASE, EXPERIENCE_LEVELS
-from ai_interviewer.feedback import FeedbackGenerator
-from ai_interviewer.voice_analysis import VoiceAnalyzer
-from ai_interviewer.face_analysis import FaceAnalyzer
+import json
 
 app = Flask(__name__)
 CORS(app)
 
-# Initialize components
-feedback_generator = FeedbackGenerator()
-voice_analyzer = VoiceAnalyzer()
-face_analyzer = FaceAnalyzer()
+# Sample question database
+QUESTION_DATABASE = {
+    "Full Stack Developer": {
+        "Fresher": [
+            "Tell me about yourself and why you want to become a Full Stack Developer.",
+            "What is the difference between HTML, CSS, and JavaScript?",
+            "Explain what a REST API is and how it works.",
+            "What is the difference between GET and POST requests?",
+            "What is version control and why is Git important?",
+        ],
+        "Intermediate": [
+            "Describe your experience with full stack development projects.",
+            "Explain microservices architecture and when you would use it.",
+            "How do you handle authentication and authorization in web applications?",
+            "What strategies do you use for optimizing application performance?",
+            "Explain the concept of CI/CD and its benefits.",
+        ],
+    },
+    "Data Scientist": {
+        "Fresher": [
+            "Tell me about yourself and your interest in data science.",
+            "What is the difference between supervised and unsupervised learning?",
+            "Explain what a neural network is in simple terms.",
+            "What is overfitting and how can you prevent it?",
+            "Describe the steps in a typical data science project.",
+        ],
+        "Intermediate": [
+            "Describe a data science project you've worked on end-to-end.",
+            "How do you handle imbalanced datasets?",
+            "Explain the bias-variance tradeoff.",
+            "What techniques do you use for feature selection?",
+            "How do you evaluate the performance of a machine learning model?",
+        ],
+    },
+    "Software Engineer": {
+        "Fresher": [
+            "Tell me about yourself and your programming background.",
+            "What programming languages are you most comfortable with?",
+            "Explain object-oriented programming concepts.",
+            "What is the difference between a stack and a queue?",
+            "How do you approach debugging a piece of code?",
+        ],
+        "Intermediate": [
+            "Describe your most challenging software engineering project.",
+            "How do you design systems for scalability?",
+            "Explain SOLID principles and their importance.",
+            "How do you approach code reviews?",
+            "Describe your experience with design patterns.",
+        ],
+    },
+    "HR Manager": {
+        "Fresher": [
+            "Tell me about yourself and why you chose HR as a career.",
+            "What do you think are the most important qualities of an HR professional?",
+            "How would you handle a conflict between two employees?",
+            "What is the purpose of performance reviews?",
+            "How do you stay organized when managing multiple tasks?",
+        ],
+        "Intermediate": [
+            "Describe your experience in HR management.",
+            "How do you develop and implement HR policies?",
+            "What strategies have you used to reduce employee turnover?",
+            "How do you handle terminations professionally?",
+            "Describe your approach to talent acquisition.",
+        ],
+    },
+    "Product Manager": {
+        "Fresher": [
+            "Tell me about yourself and your interest in product management.",
+            "What do you think makes a product successful?",
+            "How would you prioritize features for a new product?",
+            "What is the difference between a product manager and project manager?",
+            "How do you gather user feedback?",
+        ],
+        "Intermediate": [
+            "Describe a product you managed from conception to launch.",
+            "How do you create and manage a product roadmap?",
+            "What frameworks do you use for product strategy?",
+            "How do you handle stakeholder disagreements?",
+            "Describe your approach to competitive analysis.",
+        ],
+    },
+}
 
-# Store session data
-sessions = {}
+EXPERIENCE_LEVELS = ["Fresher", "Intermediate"]
 
 
 @app.route('/api/health', methods=['GET'])
@@ -59,7 +130,8 @@ def get_questions():
         if experience not in QUESTION_DATABASE[role]:
             experience = 'Fresher'
 
-        questions = QUESTION_DATABASE[role][experience][:num_questions]
+        all_questions = QUESTION_DATABASE[role][experience]
+        questions = all_questions[:min(num_questions, len(all_questions))]
 
         return jsonify({
             'questions': questions,
@@ -85,29 +157,23 @@ def submit_answer():
         audio_path = f'temp_audio_{question_num}.wav'
         audio_file.save(audio_path)
 
-        # Analyze voice (speech-to-text and voice metrics)
-        voice_results = {
-            'speaking_speed': 'Normal',  # Placeholder
-            'clarity': 85,  # Placeholder score
-            'confidence': 75,  # Placeholder score
-            'pauses': 2,  # Placeholder
-            'transcript': 'Transcribed answer would appear here...'
-        }
-
-        # Generate feedback
+        # Generate feedback (placeholder - can be enhanced)
+        import random
         feedback = {
-            'eye_contact_score': 78,  # Placeholder
-            'stability_score': 82,  # Placeholder
-            'speech_score': 80,  # Placeholder
+            'eye_contact_score': random.randint(70, 95),
+            'stability_score': random.randint(75, 95),
+            'speech_score': random.randint(70, 90),
             'strengths': [
                 'Good speaking pace',
                 'Clear articulation',
-                'Confident tone'
+                'Confident tone',
+                'Relevant answer'
             ],
             'improvements': [
-                'Reduce pauses between thoughts',
-                'Make more eye contact',
-                'Use more specific examples'
+                'Add more specific examples',
+                'Maintain eye contact',
+                'Reduce filler words',
+                'Practice more'
             ],
             'overall_feedback': 'Great answer! You demonstrated good knowledge and communication skills.'
         }
